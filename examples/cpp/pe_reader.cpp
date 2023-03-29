@@ -18,92 +18,119 @@
 
 #include <LIEF/PE.hpp>
 #include <LIEF/logging.hpp>
+#include <LIEF/binary2strings.hpp>
+#include <LIEF/extracted_string.hpp>
 
 using namespace LIEF::PE;
 
 int main(int argc, char **argv) {
-  LIEF::logging::set_level(LIEF::logging::LOGGING_LEVEL::LOG_DEBUG);
-  std::cout << "PE Reader" << '\n';
-  if (argc != 2) {
-    std::cerr << "Usage: " << argv[0] << " <PE binary>" << '\n';
-    return -1;
-  }
-
-  std::unique_ptr<const Binary> binary{Parser::parse(argv[1])};
-
-  std::cout << "== Dos Header ==" << '\n';
-  std::cout << binary->dos_header() << '\n';
-
-  std::cout << "== Header ==" << '\n';
-  std::cout << binary->header() << '\n';
-
-  std::cout << "== Optional Header ==" << '\n';
-  std::cout << binary->optional_header() << '\n';
-
-  if (binary->has_rich_header()) {
-    std::cout << "== Rich Header ==" << '\n';
-    std::cout << binary->rich_header() << '\n';
-  }
-
-  std::cout << "== Data Directories ==" << '\n';
-  for (const DataDirectory& directory : binary->data_directories()) {
-    std::cout << directory << '\n';
-  }
-
-  std::cout << "== Sections ==" << '\n';
-  for (const Section& section : binary->sections()) {
-    std::cout << section << '\n';
-  }
-
-  if (binary->imports().size() > 0) {
-    std::cout << "== Imports ==" << '\n';
-    for (const Import& import : binary->imports()) {
-      std::cout << import << '\n';
+    LIEF::logging::set_level(LIEF::logging::LOGGING_LEVEL::LOG_INFO);
+    std::cout << "PE Reader" << '\n';
+    if (argc != 2) {
+        std::cerr << "Usage: " << argv[0] << " <PE binary>" << '\n';
+        return -1;
     }
-  }
 
-  if (binary->relocations().size() > 0) {
-    std::cout << "== Relocations ==" << '\n';
-    for (const Relocation& relocation : binary->relocations()) {
-      std::cout << relocation << '\n';
+    std::unique_ptr<const Binary> binary{Parser::parse(argv[1])};
+
+    // std::cout << "== Dos Header ==" << '\n';
+    // std::cout << binary->dos_header() << '\n';
+
+    // std::cout << "== Header ==" << '\n';
+    // std::cout << binary->header() << '\n';
+
+    // std::cout << "== Optional Header ==" << '\n';
+    // std::cout << binary->optional_header() << '\n';
+
+    // if (binary->has_rich_header()) {
+    //     std::cout << "== Rich Header ==" << '\n';
+    //     std::cout << binary->rich_header() << '\n';
+    // }
+
+    // std::cout << "== Data Directories ==" << '\n';
+    // for (const DataDirectory &directory: binary->data_directories()) {
+    //     std::cout << directory << '\n';
+    // }
+
+    // std::cout << "== Sections ==" << '\n';
+    // for (const Section &section: binary->sections()) {
+    //     std::cout << section << '\n';
+    // }
+
+    // if (binary->imports().size() > 0) {
+    //     std::cout << "== Imports ==" << '\n';
+    //     for (const Import &import: binary->imports()) {
+    //         std::cout << import << '\n';
+    //     }
+    // }
+
+    // if (binary->relocations().size() > 0) {
+    //     std::cout << "== Relocations ==" << '\n';
+    //     for (const Relocation &relocation: binary->relocations()) {
+    //         std::cout << relocation << '\n';
+    //     }
+    // }
+
+    // if (binary->has_tls()) {
+    //     std::cout << "== TLS ==" << '\n';
+    //     std::cout << binary->tls() << '\n';
+    // }
+
+    // if (binary->has_exports()) {
+    //     std::cout << "== Exports ==" << '\n';
+    //     std::cout << binary->get_export() << '\n';
+    // }
+
+    // if (!binary->symbols().empty()) {
+    //     std::cout << "== Symbols ==" << '\n';
+    //     for (const Symbol &symbol: binary->symbols()) {
+    //         std::cout << symbol << '\n';
+    //     }
+    // }
+
+
+    // if (binary->has_debug()) {
+    //     std::cout << "== Debug ==" << '\n';
+    //     for (const Debug &debug: binary->debug()) {
+    //         std::cout << debug << '\n';
+    //     }
+    // }
+
+
+    // if (auto manager = binary->resources_manager()) {
+    //     std::cout << "== Resources ==" << '\n';
+    //     std::cout << *manager << '\n';
+    // }
+
+    // for (const Signature &sig: binary->signatures()) {
+    //     std::cout << "== Signature ==" << '\n';
+    //     std::cout << sig << '\n';
+    // }
+
+    const Section *rdata = binary->get_section(".rdata");
+    if (rdata == nullptr) {
+        std::cout << "No .rdata section found" << '\n';
+        return {};
     }
-  }
 
-  if (binary->has_tls()) {
-    std::cout << "== TLS ==" << '\n';
-    std::cout << binary->tls() << '\n';
-  }
+    if (rdata->content().size() > 0) {
+        std::cout << "== Strings ==" << '\n';
 
-  if (binary->has_exports()) {
-    std::cout << "== Exports ==" << '\n';
-    std::cout << binary->get_export() << '\n';
-  }
+        // Process this buffer
+        vector<std::tuple<string, string, std::pair<int, int>, bool>> r_vect = extract_all_strings(
+                rdata->content().data(), rdata->content().size(), 5, true);
 
-  if (!binary->symbols().empty()) {
-    std::cout << "== Symbols ==" << '\n';
-    for (const Symbol& symbol : binary->symbols()) {
-      std::cout << symbol << '\n';
+        // Iterate through the resulting strings, printing them
+        for (int i = 0; i < r_vect.size(); i++) {
+            bool is_interesting = std::get<3>(r_vect[i]);
+
+            if (is_interesting) {
+                string s = std::get<0>(r_vect[i]);
+                std::cout << s << '\n';
+            }
+        }
     }
-  }
 
 
-  if (binary->has_debug()) {
-    std::cout << "== Debug ==" << '\n';
-    for (const Debug& debug : binary->debug()) {
-      std::cout << debug << '\n';
-    }
-  }
-
-
-  if (auto manager = binary->resources_manager()) {
-    std::cout << "== Resources ==" << '\n';
-    std::cout << *manager << '\n';
-  }
-
-  for (const Signature& sig : binary->signatures()) {
-    std::cout << "== Signature ==" << '\n';
-    std::cout << sig << '\n';
-  }
-
-  return 0;
+    return 0;
 }

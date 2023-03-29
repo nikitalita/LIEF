@@ -134,7 +134,10 @@ set(LIEF_PUBLIC_INCLUDE_FILES)
 set(LIEF_PRIVATE_INCLUDE_FILES)
 
 set(LIBLIEF_SOURCE_FILES
+
     "${CMAKE_CURRENT_SOURCE_DIR}/src/errors.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/binary2strings.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/extracted_string.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/hash_stream.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/logging.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/iostream.cpp"
@@ -154,6 +157,9 @@ set(LIBLIEF_SOURCE_FILES
 # Grouping basic headers together
 # ===============================
 set(LIEF_INC_FILES
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/LIEF/binary2strings.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/LIEF/extracted_string.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/LIEF/string_model.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/LIEF/errors.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/LIEF/span.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/LIEF/ELF.hpp"
